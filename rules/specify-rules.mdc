@@ -1,0 +1,32 @@
+# bmp-ui Development Guidelines
+
+Auto-generated from all feature plans. Last updated: 2026-01-02
+
+## Active Technologies
+- TypeScript 5.5.2, Angular 18.2.0 + posthog-js (PostHog JavaScript SDK), @angular/router (for page view tracking), RxJS (for reactive event handling) (002-posthog-analytics)
+- Browser localStorage (for event queuing during offline scenarios), PostHog cloud service (for analytics data storage) (002-posthog-analytics)
+
+- TypeScript 5.5.2, Angular 18.2.0 + Angular CLI, Angular Material, Karma/Jasmine for testing (001-remove-storybook)
+
+## Project Structure
+
+```text
+src/
+tests/
+```
+
+## Commands
+
+npm test && npm run lint
+
+## Code Style
+
+TypeScript 5.5.2, Angular 18.2.0: Follow standard conventions
+
+## Recent Changes
+- 002-posthog-analytics: Added TypeScript 5.5.2, Angular 18.2.0 + posthog-js (PostHog JavaScript SDK), @angular/router (for page view tracking), RxJS (for reactive event handling)
+
+- 001-remove-storybook: Added TypeScript 5.5.2, Angular 18.2.0 + Angular CLI, Angular Material, Karma/Jasmine for testing
+
+<!-- MANUAL ADDITIONS START -->
+<!-- MANUAL ADDITIONS END -->

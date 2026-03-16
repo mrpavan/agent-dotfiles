@@ -1,0 +1,8 @@
+description = "Full-file analysis of all PR changes."
+prompt = """
+Review the full content of these modified files for architectural consistency:
+
+!{for file in $(git diff --name-only origin/development...HEAD); do echo "FILE: $file"; cat "$file"; echo "---"; done}
+
+Ensure new logic doesn't break existing patterns in these files.
+"""

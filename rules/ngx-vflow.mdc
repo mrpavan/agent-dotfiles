@@ -1,0 +1,111 @@
+---
+description: Comprehensive guide for using ngx-vflow Angular library for node-based UIs and flow builders
+globs: src/app/**/*.component.ts, src/app/**/*.component.html
+alwaysApply: false
+---
+
+# ngx-vflow Usage Guide
+
+`ngx-vflow` is an Angular library for creating interactive node-based UIs (diagrams, flow builders).
+**Full Documentation**: `docs/ngx-vflow.md`
+
+## Core Concepts
+
+- **Nodes**: Building blocks (default, html-template, component, group).
+- **Edges**: Connections between nodes.
+- **Handles**: Connection points on nodes.
+
+## Basic Layout
+
+```typescript
+import { Vflow } from 'ngx-vflow';
+import { ChangeDetectionStrategy, Component, signal } from '@angular/core';
+
+@Component({
+  template: `<vflow [nodes]="nodes" [edges]="edges" />`,
+  imports: [Vflow],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  styles: [`:host { width: 100%; height: 100%; }`]
+})
+export class FlowComponent {
+    nodes = [{ id: '1', point: signal({ x: 100, y: 100 }), type: 'default', text: signal('Node 1') }];
+    edges = [];
+}
+```
+
+## Node Types
+
+### 1. Default Node
+Simple text node.
+```typescript
+{
+  id: '1',
+  point: signal({ x: 100, y: 100 }),
+  type: 'default',
+  text: signal('My Label'),
+  draggable: signal(true)
+}
+```
+
+### 2. Custom Component Node (RECOMMENDED for complex logic)
+```typescript
+// 1. Create Component
+@Component({
+  template: `
+    <div class="custom-node" [style.background]="data()?.color">
+      {{ data()?.label }}
+      <handle type="source" position="right" />
+      <handle type="target" position="left" />
+    </div>
+  `,
+  imports: [Vflow]
+})
+export class MyNodeComponent extends CustomNodeComponent<MyData> {}
+
+// 2. Register in nodes array
+nodes: Node[] = [
+  {
+    id: '1',
+    point: signal({ x: 0, y: 0 }),
+    type: MyNodeComponent, // Pass class reference
+    data: signal({ label: 'Hello', color: '#fff' })
+  }
+];
+```
+
+## Edges & Connections
+
+### Creating Edges
+Edges are NOT created automatically. You must handle `(connect)`.
+
+```html
+<vflow ... (connect)="onConnect($event)" />
+```
+
+```typescript
+onConnect(connection: Connection) {
+  const newEdge: Edge = {
+    id: `${connection.source}-${connection.target}`,
+    source: connection.source,
+    target: connection.target,
+    sourceHandle: connection.sourceHandle,
+    targetHandle: connection.targetHandle
+  };
+  this.edges = [...this.edges, newEdge];
+}
+```
+
+## Best Practices
+
+1. **Use Signals**: All dynamic properties (point, text, data) should be signals.
+2. **Immutable Updates**: Always replace arrays (`this.nodes = [...nodes]`) rather than mutating.
+3. **Wait for Init**: Use `vflow.initialized()` before calling `fitView()`.
+4. **Custom Handles**: Use `<handle type="source" position="right" />` in custom nodes.
+5. **OnPush**: Always use `ChangeDetectionStrategy.OnPush`.
+
+## Signal Helpers
+Use `createNode` and `createEdge` for cleaner instantiation:
+```typescript
+import { createNode, createEdge } from 'ngx-vflow';
+const node = createNode({ id: '1', point: {x:0, y:0}, text: 'Label' });
+```

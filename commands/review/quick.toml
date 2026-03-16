@@ -1,0 +1,22 @@
+description = "Review committed changes vs upstream (remote tracking) branch."
+
+prompt = """
+Act as a Senior Developer. Review the following git diff for logical errors and clean code violations for the changed files only:
+
+!{git diff origin/development...HEAD}
+
+Key review areas:
+- Code quality, bugs, security issues.
+- Best practices, performance, readability.
+- Architecture and adherence to standards.
+- Suggestions for improvements.
+
+Structure output:
+1. **Summary**: Overall assessment (Approve/Needs changes).
+2. **Strengths**: What’s good.
+3. **Issues**: List by file/line, severity (Critical/High/Medium/Low).
+4. **Suggestions**: Actionable fixes.
+5. **Questions**: Clarifications needed.
+
+Be constructive and specific.
+"""

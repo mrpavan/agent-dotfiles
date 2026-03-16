@@ -1,0 +1,105 @@
+---
+description: Standards for tabular listing components (tabs, filters, actions, pagination)
+alwaysApply: false
+---
+# Tabular Listing Component Standard
+
+When creating or refactoring tabular listing components, follow these patterns.
+
+## Reference Implementation
+- **With Tabs**: `src/app/modules/report/chat-interaction`
+- **List Component**: `src/app/modules/report/chat-interaction/components/live_chat_agent_list`
+
+## Required Imports
+```typescript
+import { Pagination } from '@bmp/components/table/pagination.model';
+import { DEFAULT_PAGINATION_CONFIG } from 'app/modules/report/chat-interaction/shared/const/live_chat_agent.const';
+```
+
+## Required Properties
+```typescript
+public items: any[] = [];
+public pagination: Pagination = { ...DEFAULT_PAGINATION_CONFIG };
+public isLoading = false;
+public isSearching = false;
+private destroy$ = new Subject<void>();
+private searchSubject$ = new Subject<string>();
+```
+
+## Search Debounce Pattern (REQUIRED)
+Always use 300ms debounce on search:
+```typescript
+ngOnInit() {
+    this.searchSubject$.pipe(debounceTime(300), distinctUntilChanged(), takeUntil(this.destroy$))
+        .subscribe(term => { this.requestParams.filter = term; this.resetPagination(); this.loadData(); });
+    this.loadData();
+}
+updateSearch(term: string) { this.isSearching = !!term; this.searchSubject$.next(term); }
+clearSearch() { this.isSearching = false; this.requestParams.filter = ''; this.resetPagination(); this.loadData(); }
+```
+
+## Pagination Pattern (REQUIRED)
+```typescript
+private resetPagination() {
+    this.pagination.pageNo = DEFAULT_PAGINATION_CONFIG.pageNo;
+    this.pagination.pageSize = DEFAULT_PAGINATION_CONFIG.pageSize;
+}
+onPageChange(event: { pageNo: number; pageSize: number }) {
+    this.pagination.pageNo = event.pageNo;
+    this.pagination.pageSize = event.pageSize;
+    this.loadData();
+}
+```
+
+## Load Data Pattern (REQUIRED)
+```typescript
+loadData() {
+    this.isLoading = true; this.cdr.markForCheck();
+    this.requestParams.pageNo = this.pagination.pageNo;
+    this.requestParams.pageSize = this.pagination.pageSize;
+    this.apiService.getData(this.requestParams).pipe(
+        takeUntil(this.destroy$),
+        finalize(() => { this.isLoading = false; this.cdr.markForCheck(); })
+    ).subscribe({ next: res => this.handleResponse(res), error: err => console.error(err) });
+}
+```
+
+## Handle Response Pattern (CRITICAL)
+NEVER overwrite pageNo from API response:
+```typescript
+handleResponse(res) {
+    this.items = (res.data || []).map(item => ({ ...item, actionConfig: this.actionConfig }));
+    this.pagination.totalItems = res.totalRecord || 0;  // ONLY update totalItems
+    this.cdr.markForCheck();
+}
+```
+
+## SCSS Pattern
+Use `report-list` class with `margin-top` (NOT padding-top):
+```scss
+.report-list {
+    margin-top: $spacing-24;
+    .row { display: flex; justify-content: space-between; gap: $spacing-16-new; align-items: center; }
+    .row-end { display: flex; gap: $spacing-16-new; }
+    .hidden { display: none; }
+    ::ng-deep .table-container { margin-top: $spacing-24 !important; }
+}
+```
+
+## With Tabs vs Without Tabs
+- **With tabs**: Put ScrollbarDirective and DynamicHeightDirective in PARENT component only
+- **Without tabs**: Put ScrollbarDirective and DynamicHeightDirective in the page itself
+
+## DO:
+- Use `DEFAULT_PAGINATION_CONFIG` and `Pagination` type
+- 300ms debounce on search
+- `resetPagination()` before `loadData()` when filters change
+- Read from `this.pagination` in `loadData()`
+- Only update `totalItems` in response handler
+- `takeUntil(this.destroy$)` and `cdr.markForCheck()`
+
+## DON'T:
+- Pass page as parameter: `loadData(page: number)`
+- Overwrite `pagination.pageNo` from API response
+- Make API calls on every keystroke
+- Use `padding-top` or `height: 100%` in list SCSS
